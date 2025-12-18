@@ -1,73 +1,117 @@
-# React + TypeScript + Vite
+# Frontend – Hierarchical File Explorer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React implementation of a hierarchical file explorer.  
+Built with a **production-grade architecture** that emphasizes separation of concerns, clean APIs, and correct async state handling.
 
-Currently, two official plugins are available:
+This project is intentionally structured to demonstrate **senior-level frontend design**, not just UI rendering.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+# 🧱 Tech Stack & Rationale
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ⚛️ React + TypeScript
+- Strong typing for tree nodes, folders, and files
+- Predictable data flow and component boundaries
+- Prevents UI ↔ logic coupling
+- Essential for scalability and long-term maintenance
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚡ Vite
+- Ultra-fast dev server and HMR
+- Minimal configuration
+- Excellent DX for modern React projects
+- Ideal for interview and real-world projects alike
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🎨 Material UI (MUI)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Why MUI?
+- Production-proven component library
+- Accessible, consistent UI out of the box
+- Ready-made components for lists, icons, loaders, typography
+- Keeps focus on architecture instead of CSS noise
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🧠 Custom Controller Pattern (Core Design Choice)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### `useFileTreeController`
+
+The most important architectural piece in this project.
+
+Used for:
+- Managing expanded / collapsed folder state
+- Triggering async loading on demand
+- Caching loaded nodes
+- Handling retries and error recovery
+- Exposing a clean, declarative API to the UI
+
+Why?
+- Keeps UI components pure and stateless
+- Makes async behavior predictable
+- Easily replaceable with React Query / Redux / Zustand
+- Extremely testable
+
+---
+
+## 🔌 Adapter Layer (Data Mapping)
+
+### `fakeFsAdapter`
+
+A pure transformation layer between backend data and UI data.
+
+Used for:
+- Converting domain entities into tree nodes
+- Normalizing inconsistent backend shapes
+- Formatting file metadata (size, type)
+- Attaching icons and labels
+
+Why?
+- Prevents backend details from leaking into UI
+- Keeps UI logic simple
+- Allows backend changes without refactoring components
+
+---
+
+## 🧪 Mock Backend
+
+### `FakeFsServer`
+
+A realistic fake API used during development.
+
+Provides:
+- Artificial network latency
+- Random folder & file generation
+- Simulated error cases
+
+Why?
+- Enables real async behavior testing
+- Forces correct loading/error handling
+- Allows development without a real backend
+
+---
+
+# 🖥 Features
+
+### ✔ Hierarchical Tree
+- Unlimited folder depth
+- Expand / collapse folders
+- Lazy loading per folder
+
+### ✔ Async States
+- Per-node loading indicators
+- Error handling with retry support
+- Cached results to avoid refetching
+
+### ✔ Clean UI
+- Declarative rendering
+- Icons per file type
+- Placeholder state when nothing is selected
+
+### ✔ Architecture-First Design
+- UI contains no business logic
+- Logic layer contains no JSX
+- Data layer contains no state
+
