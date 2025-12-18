@@ -28,17 +28,12 @@ function LoadingRows({ paddingLeft }: { paddingLeft: number }) {
     );
 }
 
-function ErrorRow({ paddingLeft, message, onRetry, }: { paddingLeft: number; message: string; onRetry: () => void; }) {
-    return (
-        <Box sx={{ pl: paddingLeft, py: 0.75 }}>
-            <Typography variant="body2" sx={{ color: "error.main", mb: 0.5 }}>
-                Failed to load: {message}
-            </Typography>
-            <Button size="small" variant="outlined" onClick={onRetry}>
-                Retry
-            </Button>
-        </Box>
-    );
+function ErrorRow({ paddingLeft, message, }: { paddingLeft: number; message: string }) {
+    return <Box sx={{ pl: paddingLeft, py: 0.7 }}>
+        <Typography variant="body2" sx={{ color: "error.main", mb: 0.5 }}>
+            Failed to load: {message}
+        </Typography>
+    </Box>
 }
 
 export function HierarchicalExplorer<T>({ items, getId, getLabel, getSecondary, isBranch, renderIcon, loadChildren }: HierarchicalExplorerProps<T>) {
@@ -62,21 +57,11 @@ export function HierarchicalExplorer<T>({ items, getId, getLabel, getSecondary, 
                     return (
                         <Box key={id}>
                             <ExplorerRow label={getLabel(item)} secondary={getSecondary?.(item)} icon={renderIcon?.(item)} isBranch={branch} isOpen={open} indent={rowIndent} onClick={() => { if (!branch) return; toggleExpanded(item) }} />
-                            {branch && (
-                                <Collapse in={open} timeout="auto" unmountOnExit>
-                                    {loading ? (
-                                        <LoadingRows paddingLeft={childIndent} />
-                                    ) : error ? (
-                                        <ErrorRow
-                                            paddingLeft={childIndent}
-                                            message={error}
-                                            onRetry={() => retry(item)}
-                                        />
-                                    ) : (
-                                        renderLevel(children, level + 1)
-                                    )}
-                                </Collapse>
-                            )}
+                            {branch && <Collapse in={open} timeout="auto" unmountOnExit>
+                                {loading ? <LoadingRows paddingLeft={childIndent} /> :
+                                    error ? <ErrorRow paddingLeft={childIndent} message={error} /> : (renderLevel(children, level + 1))}
+                            </Collapse>
+                            }
                         </Box>
                     );
                 })}
