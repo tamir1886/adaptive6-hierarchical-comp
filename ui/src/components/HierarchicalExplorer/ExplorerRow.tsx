@@ -7,10 +7,9 @@ type ExplorerRowProps = {
   label: string;
   secondary?: string;
   icon?: React.ReactNode;
-
   isBranch: boolean;
   isOpen: boolean;
-
+  selected?: boolean;
   indent: number;
   onClick: () => void;
 };
@@ -22,12 +21,12 @@ function ExplorerRowComponent({
   isBranch,
   isOpen,
   indent,
+  selected = false,
   onClick,
 }: ExplorerRowProps) {
   return (
-    <ListItemButton onClick={onClick} sx={{ pl: indent }}>
+    <ListItemButton onClick={onClick} sx={{ pl: indent }} selected={selected}>
       <ListItemIcon sx={{ minWidth: 40 }}>{icon}</ListItemIcon>
-
       <ListItemText
         primary={label}
         secondary={secondary}

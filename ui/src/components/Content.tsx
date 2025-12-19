@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import {
   Typography,
   Box,
@@ -82,10 +82,12 @@ type RootExplorerProps = {
   data: FsItem[] | undefined;
   loading: boolean;
   error: string | null;
+  selectedId?: string;
+  onSelectFile?: (file: FsItem) => void;
 };
 
 const RootExplorer = React.memo(
-  ({ server, data, loading, error }: RootExplorerProps) => {
+  ({ server, data, loading, error, selectedId, onSelectFile }: RootExplorerProps) => {
     if (loading) return <Loading />;
     if (error) return <ErrorMsg error={error} />;
 
@@ -103,6 +105,8 @@ const RootExplorer = React.memo(
           isBranch={(item) => item.type === "folder"}
           renderIcon={getIcon}
           loadChildren={(folder) => server.fetchChildren(folder.id)}
+          selectedId={selectedId}
+          onSelect={onSelectFile}
         />
       </Box>
     );
@@ -113,6 +117,11 @@ const RootExplorer = React.memo(
 export default function Content() {
   const server = useCreateServer();
   const { data, loading, error } = useGetRootItems(server);
+  const [selectedFile, setSelectedFile] = useState<FsItem | null>(null);
+
+  const handleSelectFile = useCallback((file: FsItem) => {
+    setSelectedFile(file);
+  }, []);
 
   return (
     <Box sx={{ flex: 1, display: "flex", overflow: "hidden" }}>
@@ -124,11 +133,11 @@ export default function Content() {
           data={data}
           loading={loading}
           error={error}
+          selectedId={selectedFile?.id}
+          onSelectFile={handleSelectFile}
         />
       </Paper>
-
-      {/* data will be sent here as well on future  */}
-      <FileDetails /> 
+      <FileDetails item={selectedFile} />
     </Box>
   );
 }

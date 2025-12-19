@@ -11,9 +11,12 @@ export type HierarchicalExplorerProps<T> = {
     isBranch: (item: T) => boolean;
     renderIcon?: (item: T) => React.ReactNode;
     loadChildren?: (item: T) => Promise<T[]>;
+    onSelect?: (item: T) => void;
+     selectedId?: string;
 };
 
-function LoadingRows({ paddingLeft }: { paddingLeft: number }) {
+
+function LoadingRowSkeleton({ paddingLeft }: { paddingLeft: number }) {
     return (
         <List component="div" disablePadding>
             {Array.from({ length: 3 }).map((_, i) => (
@@ -36,11 +39,23 @@ function ErrorRow({ paddingLeft, message, }: { paddingLeft: number; message: str
     </Box>
 }
 
-export function HierarchicalExplorer<T>({ items, getId, getLabel, getSecondary, isBranch, renderIcon, loadChildren }: HierarchicalExplorerProps<T>) {
+export function HierarchicalExplorer<T>({ items, getId, getLabel, getSecondary, isBranch, renderIcon, loadChildren, selectedId, onSelect }: HierarchicalExplorerProps<T>) {
 
     const { state, toggleExpanded, retry } = useHierarchicalState(getId, loadChildren);
     const getIndent = useCallback((level: number) => 2 + level * 2, []);
+      const handleRowClick = useCallback(
+            (item: T) => {
+                if (isBranch(item)) {
+                    toggleExpanded(item);
+                    return;
+                }
+                onSelect?.(item);
+            },
+            [isBranch, onSelect, toggleExpanded]
+        );
+
     const renderLevel = useCallback((levelItems: T[], level: number): React.ReactNode => {
+
         const rowIndent = getIndent(level);
         const childIndent = getIndent(level + 1);
 
@@ -56,9 +71,9 @@ export function HierarchicalExplorer<T>({ items, getId, getLabel, getSecondary, 
 
                     return (
                         <Box key={id}>
-                            <ExplorerRow label={getLabel(item)} secondary={getSecondary?.(item)} icon={renderIcon?.(item)} isBranch={branch} isOpen={open} indent={rowIndent} onClick={() => { if (!branch) return; toggleExpanded(item) }} />
+                            <ExplorerRow label={getLabel(item)} secondary={getSecondary?.(item)} icon={renderIcon?.(item)} isBranch={branch} isOpen={open} indent={rowIndent} onClick={() => handleRowClick(item)} selected={!branch && selectedId === id} />
                             {branch && <Collapse in={open} timeout="auto" unmountOnExit>
-                                {loading ? <LoadingRows paddingLeft={childIndent} /> :
+                                {loading ? <LoadingRowSkeleton paddingLeft={childIndent} /> :
                                     error ? <ErrorRow paddingLeft={childIndent} message={error} /> : (renderLevel(children, level + 1))}
                             </Collapse>
                             }

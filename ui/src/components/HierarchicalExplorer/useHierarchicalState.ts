@@ -7,18 +7,22 @@ export type HierarchicalState<T> = {
   errorById: Map<string, string>;
 };
 
+const createInitialState = <T,>(): HierarchicalState<T> => ({
+  expanded: new Set(),
+  loading: new Set(),
+  childrenById: new Map(),
+  errorById: new Map(),
+});
+
 export function useHierarchicalState<T>(
   getId: (item: T) => string,
   loadChildren?: (item: T) => Promise<T[]>
 ) {
-  const [state, setState] = useState<HierarchicalState<T>>(() => ({
-    expanded: new Set(),
-    loading: new Set(),
-    childrenById: new Map(),
-    errorById: new Map(),
-  }));
+  const [state, setState] = useState<HierarchicalState<T>>(() =>
+    createInitialState<T>()
+  );
 
-  const startLoading = useCallback((id: string) => {
+  const markLoading = useCallback((id: string) => {
     setState((prev) => {
       const loading = new Set(prev.loading);
       loading.add(id);
@@ -30,7 +34,7 @@ export function useHierarchicalState<T>(
     });
   }, []);
 
-  const finishSuccess = useCallback((id: string, children: T[]) => {
+  const markLoaded = useCallback((id: string, children: T[]) => {
     setState((prev) => {
       const loading = new Set(prev.loading);
       loading.delete(id);
@@ -42,7 +46,7 @@ export function useHierarchicalState<T>(
     });
   }, []);
 
-  const finishError = useCallback((id: string, message: string) => {
+  const markFailed = useCallback((id: string, message: string) => {
     setState((prev) => {
       const loading = new Set(prev.loading);
       loading.delete(id);
@@ -59,44 +63,37 @@ export function useHierarchicalState<T>(
       if (!loadChildren) return;
 
       const id = getId(item);
-      startLoading(id);
+      markLoading(id);
 
       try {
         const children = await loadChildren(item);
-        finishSuccess(id, children);
+        markLoaded(id, children);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Failed to load children";
-        finishError(id, msg);
+        markFailed(id, e instanceof Error ? e.message : "Failed to load children");
       }
     },
-    [finishError, finishSuccess, getId, loadChildren, startLoading]
+    [getId, loadChildren, markFailed, markLoaded, markLoading]
   );
 
   const toggleExpanded = useCallback(
     (item: T) => {
       const id = getId(item);
-      let shouldFetch = false;
+
+      const shouldFetch =
+        !!loadChildren &&
+        !state.childrenById.has(id) &&
+        !state.loading.has(id) &&
+        !state.expanded.has(id);
 
       setState((prev) => {
         const expanded = new Set(prev.expanded);
-        const isOpen = expanded.has(id);
-
-        if (isOpen) {
-          expanded.delete(id);
-        } else {
-          expanded.add(id);
-          shouldFetch =
-            !!loadChildren &&
-            !prev.childrenById.has(id) &&
-            !prev.loading.has(id);
-        }
-
+        expanded.has(id) ? expanded.delete(id) : expanded.add(id);
         return { ...prev, expanded };
       });
 
       if (shouldFetch) void fetchChildren(item);
     },
-    [fetchChildren, getId, loadChildren]
+    [fetchChildren, getId, loadChildren, state.childrenById, state.expanded, state.loading]
   );
 
   return {

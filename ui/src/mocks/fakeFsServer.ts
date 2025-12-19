@@ -85,7 +85,6 @@ export class FakeFsServer {
       seed: options.seed ?? 1337,
       folderRatio: options.folderRatio ?? 0.35,
     };
-    console.log("[FakeFsServer] opts", this.opts);
   }
 
   async fetchChildren(parentId: string): Promise<FsItem[]> {
